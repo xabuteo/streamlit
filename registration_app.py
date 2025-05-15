@@ -70,8 +70,10 @@ with st.sidebar:
 
 if selected_page == "Home":
     st.title("🏠 Welcome to Xabuteo")
-    st.markdown("**Xabuteo website.**  
-Complete registration to gain access to the site content.")
+    st.markdown("""
+        **Xabuteo website.**  
+        Complete registration to gain access to the site content.
+    """)
 
 elif selected_page == "Register":
     st.title("📝 User Registration")
