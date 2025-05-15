@@ -3,15 +3,16 @@ import snowflake.connector
 import uuid
 from datetime import datetime
 import bcrypt
+import os
 
 # ------------------ SNOWFLAKE CONNECTION CONFIG ------------------
 SNOWFLAKE_CONFIG = {
-    'user': 'YOUR_USER',
-    'password': 'YOUR_PASSWORD',
-    'account': 'YOUR_ACCOUNT',
-    'warehouse': 'YOUR_WAREHOUSE',
-    'database': 'YOUR_DATABASE',
-    'schema': 'YOUR_SCHEMA'
+    'user': os.environ.get('user'),
+    'password': os.environ.get('password'),
+    'account': os.environ.get('account'),
+    'warehouse': os.environ.get('warehouse'),
+    'database': os.environ.get('database'),
+    'schema': os.environ.get('schema')
 }
 
 def get_snowflake_connection():
@@ -33,7 +34,6 @@ def insert_registration(data):
     cursor = conn.cursor()
 
     try:
-        # Check if email already exists
         cursor.execute("SELECT COUNT(*) FROM registrations WHERE email = %s", (data['email'],))
         if cursor.fetchone()[0] > 0:
             st.warning("🚫 This email is already registered.")
@@ -64,20 +64,15 @@ def insert_registration(data):
 
 st.set_page_config(page_title="Xabuteo", layout="wide")
 
-# Sidebar Navigation
 with st.sidebar:
     st.title("☰ Menu")
     selected_page = st.radio("Navigate", ["Home", "Register"])
 
-# Home Page
 if selected_page == "Home":
     st.title("🏠 Welcome to Xabuteo")
-    st.markdown("""
-        **Xabuteo website.**  
-        Complete registration to gain access to the site content.
-    """)
+    st.markdown("**Xabuteo website.**  
+Complete registration to gain access to the site content.")
 
-# Registration Page
 elif selected_page == "Register":
     st.title("📝 User Registration")
     with st.form("registration_form"):
