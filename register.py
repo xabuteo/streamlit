@@ -1,5 +1,6 @@
 import streamlit as st
 from utils import get_snowflake_connection, hash_password
+import re
 
 def show():
     if st.session_state.get("user_email"):
@@ -7,6 +8,10 @@ def show():
         return
 
     st.title("📝 User Registration")
+
+    def is_valid_email(email):
+        # Basic email pattern
+        return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
     def insert_registration(data):
         conn = get_snowflake_connection()
@@ -18,7 +23,7 @@ def show():
                 return False
 
             cursor.execute("""
-                INSERT INTO registrations (id, first_name, last_name, date_of_birth, gender, email, password)
+                INSERT INTO registrations (first_name, last_name, date_of_birth, gender, email, password)
                 VALUES (%s, %s, %s, %s, %s, %s)
             """, (
                 data['first_name'],
@@ -47,8 +52,15 @@ def show():
         password = st.text_input("Password", type="password")
 
         submitted = st.form_submit_button("Register")
+
         if submitted:
-            if all([first_name, last_name, email, password]):
+            if not all([first_name, last_name, email, password]):
+                st.warning("Please fill in all required fields.")
+            elif not is_valid_email(email):
+                st.warning("❌ Please enter a valid email address.")
+            elif len(password) < 8:
+                st.warning("🔒 Password must be at least 8 characters long.")
+            else:
                 form_data = {
                     "first_name": first_name,
                     "last_name": last_name,
@@ -59,5 +71,3 @@ def show():
                 }
                 if insert_registration(form_data):
                     st.success("🎉 Registration successful!")
-            else:
-                st.warning("Please fill in all required fields.")
