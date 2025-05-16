@@ -3,12 +3,11 @@ from utils import get_snowflake_connection
 
 st.title("👤 My Profile")
 
-# Simulated session state
-if "user_email" not in st.session_state:
+# Check if user is logged in
+user_email = st.session_state.get("user_email", None)
+if not user_email:
     st.warning("🔒 You must be logged in to view this page.")
-#    st.stop()
-
-email = st.session_state["user_email"]
+    st.stop()
 
 def get_user_profile(email):
     conn = get_snowflake_connection()
@@ -26,7 +25,7 @@ def get_user_profile(email):
         cursor.close()
         conn.close()
 
-profile = get_user_profile(email)
+profile = get_user_profile(user_email)
 
 if profile:
     labels = ["First Name", "Last Name", "Date of Birth", "Gender", "Email", "Registered On"]
