@@ -1,37 +1,11 @@
 import streamlit as st
-import snowflake.connector
 import uuid
 from datetime import datetime
-import bcrypt
-import os
-
-SNOWFLAKE_CONFIG = {
-    'user': os.environ.get('user'),
-    'password': os.environ.get('password'),
-    'account': os.environ.get('account'),
-    'warehouse': os.environ.get('warehouse'),
-    'database': os.environ.get('database'),
-    'schema': os.environ.get('schema')
-}
-
-def get_snowflake_connection():
-    return snowflake.connector.connect(
-        user=SNOWFLAKE_CONFIG['user'],
-        password=SNOWFLAKE_CONFIG['password'],
-        account=SNOWFLAKE_CONFIG['account'],
-        warehouse=SNOWFLAKE_CONFIG['warehouse'],
-        database=SNOWFLAKE_CONFIG['database'],
-        schema=SNOWFLAKE_CONFIG['schema']
-    )
-
-def hash_password(password: str) -> str:
-    hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
-    return hashed.decode('utf-8')
+from utils import get_snowflake_connection, hash_password
 
 def insert_registration(data):
     conn = get_snowflake_connection()
     cursor = conn.cursor()
-
     try:
         cursor.execute("SELECT COUNT(*) FROM registrations WHERE email = %s", (data['email'],))
         if cursor.fetchone()[0] > 0:
@@ -39,9 +13,10 @@ def insert_registration(data):
             return False
 
         cursor.execute("""
-            INSERT INTO registrations (first_name, last_name, date_of_birth, gender, email, password)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO registrations (id, first_name, last_name, date_of_birth, gender, email, password)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (
+            str(uuid.uuid4()),
             data['first_name'],
             data['last_name'],
             data['date_of_birth'].strftime('%Y-%m-%d'),
@@ -83,5 +58,3 @@ with st.form("registration_form"):
                 st.success("🎉 Registration successful!")
         else:
             st.warning("Please fill in all required fields.")
-
-st.write("SNOWFLAKE_CONFIG:", SNOWFLAKE_CONFIG)
