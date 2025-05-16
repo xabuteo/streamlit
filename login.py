@@ -32,7 +32,7 @@ def show():
             if verify_user(email, password):
                 st.success("✅ Login successful!")
                 st.session_state["user_email"] = email
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("❌ Invalid email or password.")
         else:
