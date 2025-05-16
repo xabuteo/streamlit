@@ -6,7 +6,7 @@ st.title("👤 My Profile")
 # Simulated session state
 if "user_email" not in st.session_state:
     st.warning("🔒 You must be logged in to view this page.")
-    st.stop()
+#    st.stop()
 
 email = st.session_state["user_email"]
 
