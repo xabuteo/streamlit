@@ -25,4 +25,4 @@ elif selection == "My Profile":
     profile.show()
 elif selection == "Logout":
     st.session_state["user_email"] = None
-    st.experimental_rerun()
+    st.rerun()
