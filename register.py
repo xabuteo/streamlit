@@ -1,6 +1,7 @@
 import streamlit as st
 from utils import get_snowflake_connection, hash_password
 import re
+from datetime import date
 
 def show():
     if st.session_state.get("user_email"):
@@ -10,7 +11,6 @@ def show():
     st.title("📝 User Registration")
 
     def is_valid_email(email):
-        # Basic email pattern
         return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
     def insert_registration(data):
@@ -42,32 +42,38 @@ def show():
             cursor.close()
             conn.close()
 
-    with st.form("registration_form"):
-        st.subheader("Enter your details:")
-        first_name = st.text_input("First Name")
-        last_name = st.text_input("Last Name")
-        date_of_birth = st.date_input("Date of Birth")
-        gender = st.selectbox("Gender", ["M", "F", "Other"])
-        email = st.text_input("Email Address")
-        password = st.text_input("Password", type="password")
+    st.subheader("Enter your details:")
 
-        submitted = st.form_submit_button("Register")
+    # Collect input fields
+    first_name = st.text_input("First Name")
+    last_name = st.text_input("Last Name")
+    date_of_birth = st.date_input("Date of Birth", min_value=date(1900, 1, 1), max_value=date.today())
+    gender = st.selectbox("Gender", ["M", "F", "Other"])
+    email = st.text_input("Email Address")
+    password = st.text_input("Password", type="password")
 
-        if submitted:
-            if not all([first_name, last_name, email, password]):
-                st.warning("Please fill in all required fields.")
-            elif not is_valid_email(email):
-                st.warning("❌ Please enter a valid email address.")
-            elif len(password) < 8:
-                st.warning("🔒 Password must be at least 8 characters long.")
-            else:
-                form_data = {
-                    "first_name": first_name,
-                    "last_name": last_name,
-                    "date_of_birth": date_of_birth,
-                    "gender": gender,
-                    "email": email,
-                    "password": password
-                }
-                if insert_registration(form_data):
-                    st.success("🎉 Registration successful!")
+    # Real-time validation messages
+    if email and not is_valid_email(email):
+        st.error("❌ Invalid email format.")
+    if password and len(password) < 8:
+        st.error("🔒 Password must be at least 8 characters long.")
+
+    # Check overall validity
+    all_fields_valid = all([first_name, last_name, email, password]) \
+                       and is_valid_email(email) \
+                       and len(password) >= 8
+
+    if st.button("Register"):
+        if all_fields_valid:
+            form_data = {
+                "first_name": first_name,
+                "last_name": last_name,
+                "date_of_birth": date_of_birth,
+                "gender": gender,
+                "email": email,
+                "password": password
+            }
+            if insert_registration(form_data):
+                st.success("🎉 Registration successful!")
+        else:
+            st.warning("🚧 Please correct the highlighted fields before submitting.")
