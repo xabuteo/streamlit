@@ -26,6 +26,7 @@ if st.button("Login"):
     if email and password:
         if verify_user(email, password):
             st.success("✅ Login successful!")
+            st.session_state["user_email"] = email  # ✅ Save user session
         else:
             st.error("❌ Invalid email or password.")
     else:
