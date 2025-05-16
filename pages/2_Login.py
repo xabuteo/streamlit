@@ -1,6 +1,9 @@
 import streamlit as st
 from utils import get_snowflake_connection, check_password
 
+if st.session_state.get("user_email"):
+    st.stop()  # Hide page if user is already logged in
+    
 def verify_user(email, password):
     conn = get_snowflake_connection()
     cursor = conn.cursor()
