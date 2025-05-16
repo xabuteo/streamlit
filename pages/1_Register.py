@@ -2,6 +2,9 @@ import streamlit as st
 from datetime import datetime
 from utils import get_snowflake_connection, hash_password
 
+if st.session_state.get("user_email"):
+    st.stop()  # Hide page if user is already logged in
+    
 def insert_registration(data):
     conn = get_snowflake_connection()
     cursor = conn.cursor()
