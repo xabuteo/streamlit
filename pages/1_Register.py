@@ -83,3 +83,5 @@ with st.form("registration_form"):
                 st.success("🎉 Registration successful!")
         else:
             st.warning("Please fill in all required fields.")
+
+st.write("SNOWFLAKE_CONFIG:", SNOWFLAKE_CONFIG)
