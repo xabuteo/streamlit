@@ -1,5 +1,5 @@
 import streamlit as st
-from pages import home, register, login, profile
+import home, register, login, profile
 
 st.set_page_config(page_title="Xabuteo", layout="wide")
 
@@ -8,11 +8,13 @@ if "user_email" not in st.session_state:
 
 st.sidebar.title("Xabuteo")
 
+# Navigation options
 if st.session_state["user_email"]:
     selection = st.sidebar.radio("Navigation", ["Home", "My Profile", "Logout"])
 else:
     selection = st.sidebar.radio("Navigation", ["Home", "Register", "Login"])
 
+# Page routing
 if selection == "Home":
     home.show()
 elif selection == "Register":
