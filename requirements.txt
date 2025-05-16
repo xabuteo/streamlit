@@ -1,6 +1,4 @@
 # requirements.txt
-snowflake-snowpark-python
 snowflake-connector-python
 streamlit
-requests
 bcrypt
