@@ -1,6 +1,5 @@
 import streamlit as st
 from utils import get_snowflake_connection, hash_password
-import uuid
 
 def show():
     if st.session_state.get("user_email"):
@@ -20,9 +19,8 @@ def show():
 
             cursor.execute("""
                 INSERT INTO registrations (id, first_name, last_name, date_of_birth, gender, email, password)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s)
             """, (
-                str(uuid.uuid4()),
                 data['first_name'],
                 data['last_name'],
                 data['date_of_birth'].strftime('%Y-%m-%d'),
