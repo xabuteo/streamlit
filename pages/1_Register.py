@@ -39,10 +39,9 @@ def insert_registration(data):
             return False
 
         cursor.execute("""
-            INSERT INTO registrations (id, first_name, last_name, date_of_birth, gender, email, password)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO registrations (first_name, last_name, date_of_birth, gender, email, password)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """, (
-            str(uuid.uuid4()),
             data['first_name'],
             data['last_name'],
             data['date_of_birth'].strftime('%Y-%m-%d'),
