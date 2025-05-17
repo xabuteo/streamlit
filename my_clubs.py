@@ -16,10 +16,10 @@ def show():
         conn = get_snowflake_connection()
         cursor = conn.cursor()
 
-        # Fetch all columns, filter later
+        # Fetch data from the view and normalize column names
         cursor.execute("SELECT * FROM PLAYER_CLUB_V WHERE email = %s", (user_email,))
         rows = cursor.fetchall()
-        columns = [col[0] for col in cursor.description]
+        columns = [col[0].lower() for col in cursor.description]  # lowercase for consistency
         df = pd.DataFrame(rows, columns=columns)
 
         if df.empty:
