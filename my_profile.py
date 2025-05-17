@@ -103,6 +103,7 @@ def show():
                     except Exception as e:
                         st.error(f"❌ Failed to update profile: {e}")
 
+    
     except Exception as e:
         st.error(f"❌ Error retrieving profile: {e}")
     finally:
