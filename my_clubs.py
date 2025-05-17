@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from datetime import date
 from utils import get_snowflake_connection
 
 def show():
@@ -15,8 +16,8 @@ def show():
         conn = get_snowflake_connection()
         cursor = conn.cursor()
 
-        # Fetch data
-        cursor.execute("SELECT  club_code, club_name, player_status, valid_from, valid_to, email FROM PLAYER_CLUB_V WHERE email = %s", (user_email,))
+        # Fetch all columns, filter later
+        cursor.execute("SELECT * FROM PLAYER_CLUB_V WHERE email = %s", (user_email,))
         rows = cursor.fetchall()
         columns = [col[0] for col in cursor.description]
         df = pd.DataFrame(rows, columns=columns)
@@ -24,6 +25,17 @@ def show():
         if df.empty:
             st.info("ℹ️ No clubs found for your account.")
             return
+
+        # Filter to selected columns
+        selected_cols = ["club_code", "club_name", "player_status", "valid_from", "valid_to"]
+        df = df[selected_cols]
+
+        # Convert date columns to datetime
+        df["valid_from"] = pd.to_datetime(df["valid_from"])
+        df["valid_to"] = pd.to_datetime(df["valid_to"])
+
+        # Sort by valid_from descending
+        df = df.sort_values(by="valid_from", ascending=False)
 
         # --- Search ---
         search_query = st.text_input("🔍 Search clubs")
@@ -43,7 +55,17 @@ def show():
             for col, selected_vals in filter_cols.items():
                 df = df[df[col].isin(selected_vals)]
 
-        st.dataframe(df, use_container_width=True)
+        # --- Bold active memberships ---
+        today = pd.to_datetime(date.today())
+
+        def highlight_active(row):
+            if row["valid_from"] <= today <= row["valid_to"]:
+                return ["font-weight: bold"] * len(row)
+            return [""] * len(row)
+
+        styled_df = df.style.apply(highlight_active, axis=1)
+
+        st.dataframe(styled_df, use_container_width=True, hide_index=True)
 
     except Exception as e:
         st.error(f"❌ Error retrieving club data: {e}")
