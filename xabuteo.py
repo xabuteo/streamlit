@@ -1,6 +1,6 @@
 import streamlit as st
 
-# Import your page modules
+# Import page modules
 import home
 import register
 import login
@@ -19,14 +19,14 @@ pages = {
 }
 
 if st.session_state["user_email"]:
-    # User is logged in
+    # Logged-in user options
     pages.update({
         "My Profile": my_profile.show,
         "My Clubs": my_clubs.show,
         "Logout": lambda: logout()
     })
 else:
-    # User not logged in
+    # Anonymous user options
     pages.update({
         "Register": register.show,
         "Login": login.show
@@ -34,15 +34,14 @@ else:
 
 # --- Sidebar Navigation ---
 with st.sidebar:
-    st.header("Xabuteo")
-    selection = st.radio("📂 Navigate", list(pages.keys()))
+    st.markdown("## 📋 Xabuteo Menu")
+    selection = st.radio("Navigate to", list(pages.keys()), label_visibility="collapsed")
 
-# --- Page Display Logic ---
+# --- Page Routing ---
 def logout():
     st.session_state["user_email"] = None
     st.success("✅ Logged out.")
     st.rerun()
 
-# Call the selected page's function
-if selection in pages:
-    pages[selection]()
+# Render selected page
+pages[selection]()
