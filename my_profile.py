@@ -12,7 +12,7 @@ def show():
         st.warning("🔒 Please log in to view your profile.")
         return
 
-    user_email = st.session_state["user_email"]
+    current_email = st.session_state["user_email"]
 
     try:
         conn = get_snowflake_connection()
@@ -22,7 +22,7 @@ def show():
             SELECT first_name, last_name, date_of_birth, gender, email
             FROM registrations
             WHERE email = %s
-        """, (user_email,))
+        """, (current_email,))
         row = cursor.fetchone()
 
         if not row:
@@ -53,16 +53,25 @@ def show():
             unsafe_allow_html=True
         )
 
-        # --- Profile as vertical table ---
-        data = {
-            "First Name": first_name,
-            "Last Name": last_name,
-            "Date of Birth": dob,
-            "Gender": gender,
-            "Email": email
-        }
-        df = pd.DataFrame(data.items(), columns=["Field", "Value"])
-        st.dataframe(df.set_index("Field"), use_container_width=True, hide_index=False)
+        # --- Profile table without headers ---
+        st.markdown("""
+        <style>
+        .profile-row { display: flex; margin-bottom: 0.5rem; }
+        .profile-label { width: 140px; font-weight: bold; }
+        </style>
+        """, unsafe_allow_html=True)
+
+        def profile_row(label, value):
+            st.markdown(
+                f'<div class="profile-row"><div class="profile-label">{label}:</div><div>{value}</div></div>',
+                unsafe_allow_html=True
+            )
+
+        profile_row("First Name", first_name)
+        profile_row("Last Name", last_name)
+        profile_row("Date of Birth", dob)
+        profile_row("Gender", gender)
+        profile_row("Email", email)
 
         # --- Update Profile Form ---
         with st.expander("✏️ Update Profile"):
@@ -71,16 +80,25 @@ def show():
                 new_last = st.text_input("Last Name", last_name)
                 new_dob = st.date_input("Date of Birth", dob)
                 new_gender = st.selectbox("Gender", ["M", "F", "Other"], index=["M", "F", "Other"].index(gender))
+                new_email = st.text_input("Email", email)
 
                 submitted = st.form_submit_button("Update")
                 if submitted:
                     try:
                         cursor.execute("""
                             UPDATE registrations
-                            SET first_name = %s, last_name = %s, date_of_birth = %s, gender = %s
+                            SET first_name = %s,
+                                last_name = %s,
+                                date_of_birth = %s,
+                                gender = %s,
+                                email = %s
                             WHERE email = %s
-                        """, (new_first, new_last, new_dob.strftime('%Y-%m-%d'), new_gender, user_email))
+                        """, (
+                            new_first, new_last, new_dob.strftime('%Y-%m-%d'),
+                            new_gender, new_email, current_email
+                        ))
                         conn.commit()
+                        st.session_state["user_email"] = new_email
                         st.success("✅ Profile updated successfully. Please refresh the page.")
                     except Exception as e:
                         st.error(f"❌ Failed to update profile: {e}")
