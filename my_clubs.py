@@ -30,10 +30,6 @@ def show():
         selected_cols = ["club_code", "club_name", "player_status", "valid_from", "valid_to"]
         df = df[selected_cols]
 
-        # Convert date columns to datetime
-        df["valid_from"] = pd.to_datetime(df["valid_from"])
-        df["valid_to"] = pd.to_datetime(df["valid_to"])
-
         # Sort by valid_from descending
         df = df.sort_values(by="valid_from", ascending=False)
 
