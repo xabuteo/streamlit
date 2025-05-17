@@ -35,7 +35,7 @@ else:
 # --- Sidebar Navigation ---
 with st.sidebar:
     st.header("Xabuteo")
-    selection = st.selectbox("📂 Navigate", list(pages.keys()))
+    selection = st.radio("📂 Navigate", list(pages.keys()))
 
 # --- Page Display Logic ---
 def logout():
