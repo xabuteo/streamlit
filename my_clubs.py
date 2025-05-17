@@ -52,10 +52,10 @@ def show():
                 df = df[df[col].isin(selected_vals)]
 
         # --- Bold active memberships ---
-        today = pd.to_datetime(date.today())
+        # today = pd.to_datetime(date.today())
 
         def highlight_active(row):
-            if row["valid_from"] <= today <= row["valid_to"]:
+            if row["valid_from"] <= date.today() <= row["valid_to"]:
                 return ["font-weight: bold"] * len(row)
             return [""] * len(row)
 
