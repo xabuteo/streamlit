@@ -1,30 +1,48 @@
 import streamlit as st
-import home, register, login, profile, my_clubs
 
-st.set_page_config(page_title="Xabuteo", layout="wide")
+# Import your page modules
+import home
+import register
+import login
+import my_profile
+import my_clubs
 
+st.set_page_config(page_title="Xabuteo", layout="wide", initial_sidebar_state="expanded")
+
+# --- Initialize session state ---
 if "user_email" not in st.session_state:
     st.session_state["user_email"] = None
 
-st.sidebar.title("Xabuteo")
+# --- Define page options dynamically ---
+pages = {
+    "Home": home.show,
+}
 
-# Navigation options
 if st.session_state["user_email"]:
-    selection = st.sidebar.radio("Navigation", ["Home", "My Profile", "My Clubs", "Logout"])
+    # User is logged in
+    pages.update({
+        "My Profile": my_profile.show,
+        "My Clubs": my_clubs.show,
+        "Logout": lambda: logout()
+    })
 else:
-    selection = st.sidebar.radio("Navigation", ["Home", "Register", "Login"])
+    # User not logged in
+    pages.update({
+        "Register": register.show,
+        "Login": login.show
+    })
 
-# Page routing
-if selection == "Home":
-    home.show()
-elif selection == "Register":
-    register.show()
-elif selection == "Login":
-    login.show()
-elif selection == "My Profile":
-    profile.show()
-elif selection == "My Clubs":
-    my_clubs.show()
-elif selection == "Logout":
+# --- Sidebar Navigation ---
+with st.sidebar:
+    st.header("Xabuteo")
+    selection = st.selectbox("📂 Navigate", list(pages.keys()))
+
+# --- Page Display Logic ---
+def logout():
     st.session_state["user_email"] = None
+    st.success("✅ Logged out.")
     st.rerun()
+
+# Call the selected page's function
+if selection in pages:
+    pages[selection]()
