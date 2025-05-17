@@ -16,7 +16,7 @@ def show():
         cursor = conn.cursor()
 
         # Fetch data
-        cursor.execute("SELECT  club_code, club_name, player_status, valid_from, valid_to, user_email FROM PLAYER_CLUB_V WHERE email = %s", (user_email,))
+        cursor.execute("SELECT  club_code, club_name, player_status, valid_from, valid_to, email FROM PLAYER_CLUB_V WHERE email = %s", (user_email,))
         rows = cursor.fetchall()
         columns = [col[0] for col in cursor.description]
         df = pd.DataFrame(rows, columns=columns)
