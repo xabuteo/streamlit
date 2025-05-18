@@ -1,70 +1,86 @@
 import streamlit as st
 import pandas as pd
-from datetime import date
 from utils import get_snowflake_connection
+from datetime import date
 
 def show():
-    st.title("⚽ My Clubs")
+    st.title("🏟️ My Clubs")
 
-    if "user_email" not in st.session_state or not st.session_state["user_email"]:
+    if "user_email" not in st.session_state:
         st.warning("🔒 Please log in to view your clubs.")
         return
 
-    user_email = st.session_state["user_email"]
+    conn = get_snowflake_connection()
+    cursor = conn.cursor()
 
     try:
-        conn = get_snowflake_connection()
-        cursor = conn.cursor()
+        # Get Player ID for logged-in user
+        cursor.execute("SELECT ID FROM XABUTEO.PUBLIC.REGISTRATIONS WHERE EMAIL = %s", (st.session_state["user_email"],))
+        player_row = cursor.fetchone()
+        if not player_row:
+            st.error("❌ Could not find player ID.")
+            return
+        player_id = player_row[0]
 
-        # Fetch data from the view and normalize column names
-        cursor.execute("SELECT * FROM PLAYER_CLUB_V WHERE email = %s", (user_email,))
+        # --- Display PLAYER_CLUB_V view ---
+        cursor.execute("SELECT * FROM XABUTEO.PUBLIC.PLAYER_CLUB_V WHERE EMAIL = %s", (st.session_state["user_email"],))
         rows = cursor.fetchall()
-        columns = [col[0].lower() for col in cursor.description]  # lowercase for consistency
+        columns = [col[0] for col in cursor.description]
         df = pd.DataFrame(rows, columns=columns)
 
-        if df.empty:
-            st.info("ℹ️ No clubs found for your account.")
-            return
+        # Filter to selected columns and sort
+        display_cols = ['club_code', 'club_name', 'player_status', 'valid_from', 'valid_to']
+        if set(display_cols).issubset(df.columns):
+            df = df[display_cols]
+            df['highlight'] = df.apply(
+                lambda row: row['valid_from'] <= date.today() <= row['valid_to'], axis=1
+            )
+            df = df.sort_values(by='valid_from', ascending=False)
+            styled_df = df.drop(columns='highlight').style.apply(
+                lambda x: ['font-weight: bold' if h else '' for h in df['highlight']], axis=0
+            )
+            st.dataframe(styled_df, use_container_width=True, hide_index=True)
+        else:
+            st.info("ℹ️ No club data available.")
 
-        # Filter to selected columns
-        selected_cols = ["club_code", "club_name", "player_status", "valid_from", "valid_to"]
-        df = df[selected_cols]
+        # --- Request New Club ---
+        st.markdown("---")
+        with st.expander("➕ Request New Club"):
+            # Associations dropdown
+            cursor.execute("SELECT id, association_name FROM xabuteo.public.associations ORDER BY association_name")
+            assoc_data = cursor.fetchall()
+            assoc_options = {name: id for id, name in assoc_data}
+            assoc_name = st.selectbox("Select Association", list(assoc_options.keys()))
 
-        # Sort by valid_from descending
-        df = df.sort_values(by="valid_from", ascending=False)
+            # Clubs dropdown (filtered)
+            if assoc_name:
+                assoc_id = assoc_options[assoc_name]
+                cursor.execute("""
+                    SELECT id, club_name FROM xabuteo.public.clubs
+                    WHERE association_id = %s
+                    ORDER BY club_name
+                """, (assoc_id,))
+                club_data = cursor.fetchall()
+                club_options = {name: id for id, name in club_data}
 
-        # --- Search ---
-        search_query = st.text_input("🔍 Search clubs")
+                club_name = st.selectbox("Select Club", list(club_options.keys()))
+                valid_from = st.date_input("Valid From", date.today())
+                valid_to = st.date_input("Valid To", date.today())
 
-        if search_query:
-            df = df[df.apply(lambda row: row.astype(str).str.contains(search_query, case=False).any(), axis=1)]
-
-        # --- Column filters ---
-        with st.expander("🔧 Filter columns"):
-            filter_cols = {}
-            for col in df.columns:
-                unique_vals = df[col].dropna().unique()
-                if len(unique_vals) > 1 and len(unique_vals) <= 50:
-                    selected_vals = st.multiselect(f"Filter by {col}", options=sorted(unique_vals), default=unique_vals)
-                    filter_cols[col] = selected_vals
-
-            for col, selected_vals in filter_cols.items():
-                df = df[df[col].isin(selected_vals)]
-
-        # --- Bold active memberships ---
-        # today = pd.to_datetime(date.today())
-
-        def highlight_active(row):
-            if row["valid_from"] <= date.today() <= row["valid_to"]:
-                return ["font-weight: bold"] * len(row)
-            return [""] * len(row)
-
-        styled_df = df.style.apply(highlight_active, axis=1)
-
-        st.dataframe(styled_df, use_container_width=True, hide_index=True)
+                if st.button("Submit Club Request"):
+                    club_id = club_options[club_name]
+                    try:
+                        cursor.execute("""
+                            INSERT INTO XABUTEO.PUBLIC.PLAYER_CLUB (PLAYER_ID, CLUB_ID, VALID_FROM, VALID_TO)
+                            VALUES (%s, %s, %s, %s)
+                        """, (player_id, club_id, valid_from, valid_to))
+                        conn.commit()
+                        st.success("✅ Club request submitted successfully.")
+                    except Exception as e:
+                        st.error(f"❌ Failed to submit request: {e}")
 
     except Exception as e:
-        st.error(f"❌ Error retrieving club data: {e}")
+        st.error(f"❌ Error loading clubs: {e}")
     finally:
         cursor.close()
         conn.close()
