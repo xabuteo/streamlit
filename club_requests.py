@@ -51,7 +51,7 @@ def show():
                         """, (request["id"],))
                         conn.commit()
                         st.success(f"Approved {request['club_name']} for {request['player_name']}")
-                        st.experimental_rerun()
+                        st.rerun()
 
                 with col2:
                     if st.button("❌ Reject", key=f"reject_{request['id']}"):
@@ -62,7 +62,7 @@ def show():
                         """, (request["id"],))
                         conn.commit()
                         st.warning(f"Rejected {request['club_name']} for {request['player_name']}")
-                        st.experimental_rerun()
+                        st.rerun()
 
     except Exception as e:
         st.error(f"❌ Error loading requests: {e}")
