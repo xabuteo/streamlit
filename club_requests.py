@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 from utils import get_snowflake_connection
 
 def show():
@@ -25,28 +24,44 @@ def show():
             st.info("✅ No pending club requests.")
             return
 
-        df = pd.DataFrame(rows, columns=cols)
+        for row in rows:
+            request = dict(zip(cols, row))
 
-        # Show pending requests as a clean table
-        st.dataframe(df.drop(columns=["id", "player_status"]), use_container_width=True, hide_index=True)
-
-        # Add approve/reject buttons for each row
-        st.markdown("### ✍️ Manage Requests")
-        for i, row in df.iterrows():
             with st.container():
-                st.write(f"**{row['player_name']}** → **{row['club_name']}** ({row['valid_from']} to {row['valid_to']})")
-                col1, col2 = st.columns(2)
+                st.markdown(
+                    f"""
+                    <div style="border: 2px solid #3dc2d4; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                        <strong>👤 Player:</strong> {request['player_name']}<br>
+                        <strong>🏟️ Club:</strong> {request['club_name']}<br>
+                        <strong>📅 Valid From:</strong> {request['valid_from']}<br>
+                        <strong>📅 Valid To:</strong> {request['valid_to']}<br>
+                        <strong>🕒 Status:</strong> {request['player_status']}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+                col1, col2 = st.columns([1, 1])
                 with col1:
-                    if st.button("✅ Approve", key=f"approve_{row['id']}"):
-                        cursor.execute("UPDATE xabuteo.public.player_club SET player_status = 'Approved' WHERE id = %s", (row['id'],))
+                    if st.button("✅ Approve", key=f"approve_{request['id']}"):
+                        cursor.execute("""
+                            UPDATE xabuteo.public.player_club
+                            SET player_status = 'Approved'
+                            WHERE id = %s
+                        """, (request["id"],))
                         conn.commit()
-                        st.success(f"Approved {row['club_name']} for {row['player_name']}")
+                        st.success(f"Approved {request['club_name']} for {request['player_name']}")
                         st.experimental_rerun()
+
                 with col2:
-                    if st.button("❌ Reject", key=f"reject_{row['id']}"):
-                        cursor.execute("UPDATE xabuteo.public.player_club SET player_status = 'Rejected' WHERE id = %s", (row['id'],))
+                    if st.button("❌ Reject", key=f"reject_{request['id']}"):
+                        cursor.execute("""
+                            UPDATE xabuteo.public.player_club
+                            SET player_status = 'Rejected'
+                            WHERE id = %s
+                        """, (request["id"],))
                         conn.commit()
-                        st.warning(f"Rejected {row['club_name']} for {row['player_name']}")
+                        st.warning(f"Rejected {request['club_name']} for {request['player_name']}")
                         st.experimental_rerun()
 
     except Exception as e:
