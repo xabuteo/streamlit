@@ -25,13 +25,14 @@ def show():
         # --- Display PLAYER_CLUB_V view ---
         cursor.execute("SELECT * FROM XABUTEO.PUBLIC.PLAYER_CLUB_V WHERE EMAIL = %s", (st.session_state["user_email"],))
         rows = cursor.fetchall()
-        columns = [col[0] for col in cursor.description]
+        columns = [desc[0].lower() for desc in cursor.description]  # lowercase for matching
         df = pd.DataFrame(rows, columns=columns)
 
-        # Filter to selected columns and sort
-        display_cols = ['club_code', 'club_name', 'player_status', 'valid_from', 'valid_to']
-        if set(display_cols).issubset(df.columns):
-            df = df[display_cols]
+        expected_cols = ['club_code', 'club_name', 'player_status', 'valid_from', 'valid_to']
+        actual_cols = df.columns.tolist()
+
+        if all(col in actual_cols for col in expected_cols):
+            df = df[expected_cols]
             df['highlight'] = df.apply(
                 lambda row: row['valid_from'] <= date.today() <= row['valid_to'], axis=1
             )
@@ -41,7 +42,8 @@ def show():
             )
             st.dataframe(styled_df, use_container_width=True, hide_index=True)
         else:
-            st.info("ℹ️ No club data available.")
+            st.warning("Columns found: " + ", ".join(actual_cols))
+            st.info("ℹ️ Expected columns not found in view.")
 
         # --- Request New Club ---
         st.markdown("---")
