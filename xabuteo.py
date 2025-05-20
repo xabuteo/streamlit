@@ -7,6 +7,7 @@ import login
 import my_profile
 import my_clubs
 import club_requests
+import events
 
 st.set_page_config(page_title="Xabuteo", layout="wide", initial_sidebar_state="expanded")
 
@@ -25,6 +26,7 @@ if st.session_state["user_email"]:
         "My Profile": my_profile.show,
         "My Clubs": my_clubs.show,
         "Club Requests": club_requests.show,
+        "Events": club_requests.show,
         "Logout": lambda: logout()
     })
 else:
