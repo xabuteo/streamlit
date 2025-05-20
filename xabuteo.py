@@ -26,7 +26,7 @@ if st.session_state["user_email"]:
         "My Profile": my_profile.show,
         "My Clubs": my_clubs.show,
         "Club Requests": club_requests.show,
-        "Events": club_requests.show,
+        "Events": events.show,
         "Logout": lambda: logout()
     })
 else:
