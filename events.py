@@ -54,7 +54,7 @@ def show():
             event_title = st.text_input("Event Title")
             event_type = st.selectbox("Event Type", ["Tournament", "Training", "Meeting", "Other"])
             event_open = st.checkbox("Open Event")
-            event_women = st.checkbox("Women's Event")
+            event_women = st.checkbox("Womens Event")
             event_junior = st.checkbox("Junior Event")
             event_veteran = st.checkbox("Veteran Event")
             event_teams = st.checkbox("Team Event")
