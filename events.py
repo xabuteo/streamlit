@@ -18,20 +18,24 @@ def show():
             st.info("No events found.")
             return
 
-        # --- Filters ---
+        # --- Filters: 3 columns ---
         with st.expander("🔎 Filter Events", expanded=True):
-            search_text = st.text_input("Search by Event Title")
-            event_types = df["EVENT_TYPE"].dropna().unique().tolist()
-            selected_type = st.selectbox("Filter by Event Type", ["All"] + event_types)
+            col1, col2, col3 = st.columns(3)
 
-            try:
-                cursor.execute("SELECT id, association_name FROM xabuteo.public.associations ORDER BY association_name")
-                assoc_list = cursor.fetchall()
-                assoc_map = {name: id for id, name in assoc_list}
-                assoc_names = ["All"] + list(assoc_map.keys())
-                selected_assoc = st.selectbox("Filter by Association", assoc_names)
-            except:
-                selected_assoc = "All"
+            with col1:
+                search_text = st.text_input("Search by Title")
+            with col2:
+                event_types = df["EVENT_TYPE"].dropna().unique().tolist()
+                selected_type = st.selectbox("Event Type", ["All"] + event_types)
+            with col3:
+                try:
+                    cursor.execute("SELECT id, association_name FROM xabuteo.public.associations ORDER BY association_name")
+                    assoc_list = cursor.fetchall()
+                    assoc_map = {name: id for id, name in assoc_list}
+                    assoc_names = ["All"] + list(assoc_map.keys())
+                    selected_assoc = st.selectbox("Association", assoc_names)
+                except:
+                    selected_assoc = "All"
 
         # Apply filters
         if search_text:
@@ -42,8 +46,11 @@ def show():
             assoc_id = assoc_map[selected_assoc]
             df = df[df["ASSOCIATION_ID"] == assoc_id]
 
-        # Display table
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        # --- Hide columns ---
+        hidden_cols = ["ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE", "EVENT_EMAIL"]
+        df_display = df.drop(columns=[col for col in hidden_cols if col in df.columns])
+
+        st.dataframe(df_display, use_container_width=True, hide_index=True)
 
     except Exception as e:
         st.error(f"Error loading events: {e}")
@@ -54,7 +61,7 @@ def show():
             event_title = st.text_input("Event Title")
             event_type = st.selectbox("Event Type", ["Tournament", "Training", "Meeting", "Other"])
             event_open = st.checkbox("Open Event")
-            event_women = st.checkbox("Womens Event")
+            event_women = st.checkbox("Women Only")
             event_junior = st.checkbox("Junior Event")
             event_veteran = st.checkbox("Veteran Event")
             event_teams = st.checkbox("Team Event")
@@ -65,11 +72,9 @@ def show():
             reg_open_date = st.date_input("Registration Opens")
             reg_close_date = st.date_input("Registration Closes")
 
-            # event_status = st.selectbox("Status", ["Pending", "Confirmed", "Cancelled"])
             event_email = st.text_input("Contact Email")
             event_comments = st.text_area("Comments")
 
-            # Association dropdown again
             try:
                 cursor.execute("SELECT id, association_name FROM xabuteo.public.associations ORDER BY association_name")
                 associations = cursor.fetchall()
@@ -91,7 +96,7 @@ def show():
                                 Event_Title, Association_ID, Event_Type,
                                 Event_Open, Event_Women, Event_Junior, Event_Veteran, Event_Teams,
                                 Event_Location, Event_Start_Date, Event_End_Date,
-                                Reg_Open_Date, Reg_Close_Date, 
+                                Reg_Open_Date, Reg_Close_Date,
                                 Event_Email, Event_Comments
                             )
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -99,7 +104,7 @@ def show():
                             event_title, association_id, event_type,
                             event_open, event_women, event_junior, event_veteran, event_teams,
                             event_location, event_start_date, event_end_date,
-                            reg_open_date, reg_close_date, 
+                            reg_open_date, reg_close_date,
                             event_email, event_comments
                         ))
                         conn.commit()
