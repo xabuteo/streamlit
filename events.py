@@ -65,7 +65,7 @@ def show():
             reg_open_date = st.date_input("Registration Opens")
             reg_close_date = st.date_input("Registration Closes")
 
-            event_status = st.selectbox("Status", ["Pending", "Confirmed", "Cancelled"])
+            # event_status = st.selectbox("Status", ["Pending", "Confirmed", "Cancelled"])
             event_email = st.text_input("Contact Email")
             event_comments = st.text_area("Comments")
 
@@ -99,7 +99,7 @@ def show():
                             event_title, association_id, event_type,
                             event_open, event_women, event_junior, event_veteran, event_teams,
                             event_location, event_start_date, event_end_date,
-                            reg_open_date, reg_close_date, event_status,
+                            reg_open_date, reg_close_date, 
                             event_email, event_comments
                         ))
                         conn.commit()
