@@ -50,6 +50,22 @@ def show():
         hidden_cols = ["ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE", "EVENT_EMAIL", "UPDATE_TIMESTAMP"]
         df_display = df.drop(columns=[col for col in hidden_cols if col in df.columns])
 
+        # Insert just before st.dataframe(...) block
+        
+        # Handle event selection
+        def select_event(event_id):
+            st.session_state.selected_event_id = event_id
+            st.session_state.page = "Event Details"
+        
+        # Display with clickable titles
+        df_display = df.drop(columns=[col for col in hidden_cols if col in df.columns])
+        df_display = df_display.sort_values(by="EVENT_START_DATE", ascending=False)
+        
+        for _, row in df_display.iterrows():
+            with st.container():
+                st.markdown(f"### [{row['EVENT_TITLE']}]()", unsafe_allow_html=True)
+                st.button("View Details", key=f"btn_{row['ID']}", on_click=select_event, args=(row["ID"],))
+                
         st.dataframe(df_display, use_container_width=True, hide_index=True)
 
     except Exception as e:
