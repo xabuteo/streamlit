@@ -47,7 +47,7 @@ def show():
             df = df[df["ASSOCIATION_ID"] == assoc_id]
 
         # --- Hide columns ---
-        hidden_cols = ["ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE", "EVENT_EMAIL"]
+        hidden_cols = ["ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE", "EVENT_EMAIL", "UPDATE_TIMESTAMP"]
         df_display = df.drop(columns=[col for col in hidden_cols if col in df.columns])
 
         st.dataframe(df_display, use_container_width=True, hide_index=True)
@@ -61,7 +61,7 @@ def show():
             event_title = st.text_input("Event Title")
             event_type = st.selectbox("Event Type", ["Tournament", "Training", "Meeting", "Other"])
             event_open = st.checkbox("Open Event")
-            event_women = st.checkbox("Women Only")
+            event_women = st.checkbox("Womens Event")
             event_junior = st.checkbox("Junior Event")
             event_veteran = st.checkbox("Veteran Event")
             event_teams = st.checkbox("Team Event")
