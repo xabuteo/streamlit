@@ -54,7 +54,7 @@ def show():
             event_title = st.text_input("Event Title")
             event_type = st.selectbox("Event Type", ["Tournament", "Training", "Meeting", "Other"])
             event_open = st.checkbox("Open Event")
-            event_women = st.checkbox("Women Only")
+            event_women = st.checkbox("Women's Event")
             event_junior = st.checkbox("Junior Event")
             event_veteran = st.checkbox("Veteran Event")
             event_teams = st.checkbox("Team Event")
@@ -91,10 +91,10 @@ def show():
                                 Event_Title, Association_ID, Event_Type,
                                 Event_Open, Event_Women, Event_Junior, Event_Veteran, Event_Teams,
                                 Event_Location, Event_Start_Date, Event_End_Date,
-                                Reg_Open_Date, Reg_Close_Date, Event_Status,
+                                Reg_Open_Date, Reg_Close_Date, 
                                 Event_Email, Event_Comments
                             )
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         """, (
                             event_title, association_id, event_type,
                             event_open, event_women, event_junior, event_veteran, event_teams,
