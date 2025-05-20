@@ -5,7 +5,6 @@ from utils import get_snowflake_connection
 def show():
     st.title("📅 Events")
 
-    # Initialize session state for selected event
     if "selected_event_id" not in st.session_state:
         st.session_state.selected_event_id = None
 
@@ -24,48 +23,53 @@ def show():
         cursor.close()
         conn.close()
 
-    # Filter/search section
     st.subheader("🔍 Search and Filter")
-
     col1, col2, col3 = st.columns(3)
+    
     with col1:
         title_filter = st.text_input("Search by Title")
     with col2:
-        type_filter = st.selectbox("Event Type", options=["All"] + sorted(df["EVENT_TYPE"].dropna().unique().tolist()))
+        type_filter = st.selectbox("Event Type", options=["All"] + sorted(df["EVENT_TYPE"].dropna().unique().tolist()) if "EVENT_TYPE" in df.columns else ["All"])
     with col3:
-        status_filter = st.selectbox("Event Status", options=["All"] + sorted(df["EVENT_STATUS"].dropna().unique().tolist()))
+        if "EVENT_STATUS" in df.columns:
+            status_filter = st.selectbox("Event Status", options=["All"] + sorted(df["EVENT_STATUS"].dropna().unique().tolist()))
+        else:
+            status_filter = None
 
     # Apply filters
-    if title_filter:
+    if title_filter and "EVENT_TITLE" in df.columns:
         df = df[df["EVENT_TITLE"].str.contains(title_filter, case=False, na=False)]
-    if type_filter != "All":
+    if type_filter != "All" and "EVENT_TYPE" in df.columns:
         df = df[df["EVENT_TYPE"] == type_filter]
-    if status_filter != "All":
+    if status_filter and status_filter != "All" and "EVENT_STATUS" in df.columns:
         df = df[df["EVENT_STATUS"] == status_filter]
 
-    # Drop hidden columns
-    hidden_cols = ["ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE", "EVENT_EMAIL"]
-    df_display = df.drop(columns=[col for col in hidden_cols if col in df.columns])
+    # Columns to hide
+    hide_cols = {"ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE", "EVENT_EMAIL"}
+    display_cols = [col for col in df.columns if col not in hide_cols]
+    df_display = df[display_cols]
 
-    # Handle event selection
+    # View buttons use ID if available
     def select_event(event_id):
         st.session_state.selected_event_id = event_id
         st.session_state.page = "Event Details"
         st.rerun()
 
-    # Show filtered events with clickable titles
     st.subheader("📋 Event List")
-    for _, row in df_display.iterrows():
-        with st.container():
-            st.markdown(f"### {row['EVENT_TITLE']}")
-            meta = f"📍 {row['EVENT_LOCATION']} | 🕒 {row['EVENT_START_DATE']} → {row['EVENT_END_DATE']}"
-            st.markdown(meta)
-            col1, col2 = st.columns([0.2, 0.8])
-            with col1:
-                st.button("View Details", key=f"view_{row['ID']}", on_click=select_event, args=(row['ID'],))
-            st.markdown("---")
+    if df_display.empty:
+        st.info("No events match your filters.")
+    else:
+        for i, row in df_display.iterrows():
+            with st.container():
+                if "EVENT_TITLE" in row:
+                    st.markdown(f"### {row['EVENT_TITLE']}")
+                if "EVENT_LOCATION" in row and "EVENT_START_DATE" in row and "EVENT_END_DATE" in row:
+                    st.markdown(f"📍 {row['EVENT_LOCATION']} | 🕒 {row['EVENT_START_DATE']} → {row['EVENT_END_DATE']}")
+                if "ID" in df.columns:
+                    st.button("View Details", key=f"view_{row['ID']}", on_click=select_event, args=(row['ID'],))
+                st.markdown("---")
 
-    # Add new event form (optional)
+    # Add new event
     with st.expander("➕ Add New Event"):
         with st.form("add_event_form"):
             title = st.text_input("Event Title")
