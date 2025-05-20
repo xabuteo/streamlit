@@ -5,129 +5,96 @@ from utils import get_snowflake_connection
 def show():
     st.title("📅 Events")
 
-    conn = get_snowflake_connection()
-    cursor = conn.cursor()
+    # Initialize session state for selected event
+    if "selected_event_id" not in st.session_state:
+        st.session_state.selected_event_id = None
 
+    # Load events
     try:
-        cursor.execute("SELECT * FROM xabuteo.public.events_v ORDER BY event_start_date DESC")
+        conn = get_snowflake_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM xabuteo.public.events_v ORDER BY EVENT_START_DATE DESC")
         rows = cursor.fetchall()
         cols = [desc[0] for desc in cursor.description]
         df = pd.DataFrame(rows, columns=cols)
-
-        if df.empty:
-            st.info("No events found.")
-            return
-
-        # --- Filters: 3 columns ---
-        with st.expander("🔎 Filter Events", expanded=True):
-            col1, col2, col3 = st.columns(3)
-
-            with col1:
-                search_text = st.text_input("Search by Title")
-            with col2:
-                event_types = df["EVENT_TYPE"].dropna().unique().tolist()
-                selected_type = st.selectbox("Event Type", ["All"] + event_types)
-            with col3:
-                try:
-                    cursor.execute("SELECT id, association_name FROM xabuteo.public.associations ORDER BY association_name")
-                    assoc_list = cursor.fetchall()
-                    assoc_map = {name: id for id, name in assoc_list}
-                    assoc_names = ["All"] + list(assoc_map.keys())
-                    selected_assoc = st.selectbox("Association", assoc_names)
-                except:
-                    selected_assoc = "All"
-
-        # Apply filters
-        if search_text:
-            df = df[df["EVENT_TITLE"].str.contains(search_text, case=False, na=False)]
-        if selected_type != "All":
-            df = df[df["EVENT_TYPE"] == selected_type]
-        if selected_assoc != "All":
-            assoc_id = assoc_map[selected_assoc]
-            df = df[df["ASSOCIATION_ID"] == assoc_id]
-
-        # --- Hide columns ---
-        hidden_cols = ["ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE", "EVENT_EMAIL", "UPDATE_TIMESTAMP"]
-        df_display = df.drop(columns=[col for col in hidden_cols if col in df.columns])
-
-        # Insert just before st.dataframe(...) block
-        
-        # Handle event selection
-        def select_event(event_id):
-            st.session_state.selected_event_id = event_id
-            st.session_state.page = "Event Details"
-        
-        # Display with clickable titles
-        df_display = df.drop(columns=[col for col in hidden_cols if col in df.columns])
-        df_display = df_display.sort_values(by="EVENT_START_DATE", ascending=False)
-        
-        for _, row in df_display.iterrows():
-            with st.container():
-                st.markdown(f"### [{row['EVENT_TITLE']}]()", unsafe_allow_html=True)
-                st.button("View Details", key=f"btn_{row['ID']}", on_click=select_event, args=(row["ID"],))
-                
-        st.dataframe(df_display, use_container_width=True, hide_index=True)
-
     except Exception as e:
         st.error(f"Error loading events: {e}")
+        return
+    finally:
+        cursor.close()
+        conn.close()
 
-    # --- Add New Event ---
+    # Filter/search section
+    st.subheader("🔍 Search and Filter")
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        title_filter = st.text_input("Search by Title")
+    with col2:
+        type_filter = st.selectbox("Event Type", options=["All"] + sorted(df["EVENT_TYPE"].dropna().unique().tolist()))
+    with col3:
+        status_filter = st.selectbox("Event Status", options=["All"] + sorted(df["EVENT_STATUS"].dropna().unique().tolist()))
+
+    # Apply filters
+    if title_filter:
+        df = df[df["EVENT_TITLE"].str.contains(title_filter, case=False, na=False)]
+    if type_filter != "All":
+        df = df[df["EVENT_TYPE"] == type_filter]
+    if status_filter != "All":
+        df = df[df["EVENT_STATUS"] == status_filter]
+
+    # Drop hidden columns
+    hidden_cols = ["ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE", "EVENT_EMAIL"]
+    df_display = df.drop(columns=[col for col in hidden_cols if col in df.columns])
+
+    # Handle event selection
+    def select_event(event_id):
+        st.session_state.selected_event_id = event_id
+        st.session_state.page = "Event Details"
+        st.rerun()
+
+    # Show filtered events with clickable titles
+    st.subheader("📋 Event List")
+    for _, row in df_display.iterrows():
+        with st.container():
+            st.markdown(f"### {row['EVENT_TITLE']}")
+            meta = f"📍 {row['EVENT_LOCATION']} | 🕒 {row['EVENT_START_DATE']} → {row['EVENT_END_DATE']}"
+            st.markdown(meta)
+            col1, col2 = st.columns([0.2, 0.8])
+            with col1:
+                st.button("View Details", key=f"view_{row['ID']}", on_click=select_event, args=(row['ID'],))
+            st.markdown("---")
+
+    # Add new event form (optional)
     with st.expander("➕ Add New Event"):
-        with st.form("event_form"):
-            event_title = st.text_input("Event Title")
-            event_type = st.selectbox("Event Type", ["Tournament", "Training", "Meeting", "Other"])
-            event_open = st.checkbox("Open Event")
-            event_women = st.checkbox("Womens Event")
-            event_junior = st.checkbox("Junior Event")
-            event_veteran = st.checkbox("Veteran Event")
-            event_teams = st.checkbox("Team Event")
-            event_location = st.text_input("Event Location")
+        with st.form("add_event_form"):
+            title = st.text_input("Event Title")
+            event_type = st.text_input("Event Type")
+            location = st.text_input("Location")
+            start_date = st.date_input("Start Date")
+            end_date = st.date_input("End Date")
+            status = st.selectbox("Event Status", ["Pending", "Confirmed", "Cancelled"])
+            submit = st.form_submit_button("Add Event")
 
-            event_start_date = st.date_input("Start Date")
-            event_end_date = st.date_input("End Date")
-            reg_open_date = st.date_input("Registration Opens")
-            reg_close_date = st.date_input("Registration Closes")
-
-            event_email = st.text_input("Contact Email")
-            event_comments = st.text_area("Comments")
-
-            try:
-                cursor.execute("SELECT id, association_name FROM xabuteo.public.associations ORDER BY association_name")
-                associations = cursor.fetchall()
-                assoc_map_insert = {name: id for id, name in associations}
-                association_name = st.selectbox("Association", list(assoc_map_insert.keys()))
-                association_id = assoc_map_insert[association_name]
-            except:
-                st.warning("Failed to load associations.")
-                association_id = None
-
-            submitted = st.form_submit_button("Submit")
-            if submitted:
-                if not event_title or not association_id:
-                    st.warning("Event title and association are required.")
-                else:
-                    try:
-                        cursor.execute("""
-                            INSERT INTO xabuteo.public.events (
-                                Event_Title, Association_ID, Event_Type,
-                                Event_Open, Event_Women, Event_Junior, Event_Veteran, Event_Teams,
-                                Event_Location, Event_Start_Date, Event_End_Date,
-                                Reg_Open_Date, Reg_Close_Date,
-                                Event_Email, Event_Comments
-                            )
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                        """, (
-                            event_title, association_id, event_type,
-                            event_open, event_women, event_junior, event_veteran, event_teams,
-                            event_location, event_start_date, event_end_date,
-                            reg_open_date, reg_close_date,
-                            event_email, event_comments
-                        ))
-                        conn.commit()
-                        st.success("✅ Event added successfully!")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Error inserting event: {e}")
-
-    cursor.close()
-    conn.close()
+            if submit:
+                try:
+                    conn = get_snowflake_connection()
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        INSERT INTO xabuteo.public.events (
+                            event_title, event_type, event_location, event_start_date, event_end_date, event_status
+                        ) VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (
+                        title, event_type, location,
+                        start_date.strftime('%Y-%m-%d'),
+                        end_date.strftime('%Y-%m-%d'),
+                        status
+                    ))
+                    conn.commit()
+                    st.success("✅ Event added successfully.")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error inserting event: {e}")
+                finally:
+                    cursor.close()
+                    conn.close()
