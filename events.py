@@ -53,7 +53,7 @@ def show():
 
     # Columns to hide
     hide_cols = {
-        "ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE", "EVENT_EMAIL"
+        "ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE", "EVENT_EMAIL", "EVENT_OPEN","EVENT_WOMEN","EVENT_JUNIOR","EVENT_VETERAN","EVENT_TEAMS","UPDATE_TIMESTAMP"
     }
     display_cols = [col for col in df.columns if col not in hide_cols]
     df_display = df[display_cols]
