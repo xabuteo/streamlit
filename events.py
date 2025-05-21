@@ -55,19 +55,27 @@ def show():
 
     for _, row in df.iterrows():
         with st.container():
-            st.markdown(
-                f"""
-                <div style="border:1px solid #ccc; padding:1rem; border-radius:1rem; margin-bottom:1rem; background-color:#f9f9f9;">
-                    <h4>{row['EVENT_TITLE']}</h4>
-                    <p><strong>Type:</strong> {row['EVENT_TYPE']}</p>
-                    <p><strong>Status:</strong> {row['EVENT_STATUS']}</p>
-                    <p><strong>Location:</strong> {row['EVENT_LOCATION']}</p>
-                    <p><strong>Start Date:</strong> {row['EVENT_START_DATE']}</p>
-                    <p><strong>End Date:</strong> {row['EVENT_END_DATE']}</p>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            st.markdown("----")
+            st.markdown(f"### {row['EVENT_TITLE']}")
+
+            # Event details as table
+            event_details = {
+                "Type": row["EVENT_TYPE"],
+                "Status": row["EVENT_STATUS"],
+                "Location": row["EVENT_LOCATION"],
+                "Start Date": row["EVENT_START_DATE"],
+                "End Date": row["EVENT_END_DATE"],
+                "Women's Event": "Yes" if row.get("EVENT_WOMEN") else "No",
+                "Junior Event": "Yes" if row.get("EVENT_JUNIOR") else "No",
+                "Veteran Event": "Yes" if row.get("EVENT_VETERAN") else "No",
+                "Teams Event": "Yes" if row.get("EVENT_TEAMS") else "No",
+            }
+
+            # Display as 2-column table
+            for key, value in event_details.items():
+                col1, col2 = st.columns([1, 3])
+                col1.markdown(f"**{key}**")
+                col2.markdown(str(value))
 
     # Add new event
     with st.expander("➕ Add New Event"):
