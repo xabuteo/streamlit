@@ -53,13 +53,25 @@ def show():
 
     # Columns to hide
     hide_cols = {
-        "ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE", "EVENT_EMAIL", "EVENT_OPEN","EVENT_WOMEN","EVENT_JUNIOR","EVENT_VETERAN","EVENT_TEAMS","UPDATE_TIMESTAMP"
+        "ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE",
+        "EVENT_EMAIL", "EVENT_OPEN", "EVENT_WOMEN", "EVENT_JUNIOR",
+        "EVENT_VETERAN", "EVENT_TEAMS", "UPDATE_TIMESTAMP"
     }
     display_cols = [col for col in df.columns if col not in hide_cols]
     df_display = df[display_cols]
 
     st.subheader("📋 Event List")
     st.dataframe(df_display, use_container_width=True)
+
+    st.markdown("---")
+    st.subheader("🔍 Click an event title to view more details")
+
+    # Expanders for full event detail
+    for _, row in df.iterrows():
+        with st.expander(f"📌 {row['EVENT_TITLE']}"):
+            st.markdown("### 📝 Event Details")
+            for col in df.columns:
+                st.markdown(f"**{col.replace('_', ' ').title()}**: {row[col]}")
 
     # Add new event
     with st.expander("➕ Add New Event"):
