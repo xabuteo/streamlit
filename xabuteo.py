@@ -1,51 +1,45 @@
+# xabuteo.py
 import streamlit as st
+import streamlit_authenticator as stauth
+import yaml
+from yaml.loader import SafeLoader
+from pages import register, login, my_profile, my_clubs, club_requests, events
 
-# Import page modules
-import home
-import register
-import login
-import my_profile
-import my_clubs
-import club_requests
-import events
+# Load configuration for authentication
+with open("config.yaml") as file:
+    config = yaml.load(file, Loader=SafeLoader)
 
-st.set_page_config(page_title="Xabuteo", layout="wide", initial_sidebar_state="expanded")
+authenticator = stauth.Authenticate(
+    config['credentials'],
+    config['cookie']['name'],
+    config['cookie']['key'],
+    config['cookie']['expiry_days']
+)
 
-# --- Initialize session state ---
-if "user_email" not in st.session_state:
-    st.session_state["user_email"] = None
+name, authentication_status, username = authenticator.login("Login", "main")
 
-# --- Define page options dynamically ---
-pages = {
-    "Home": home.show,
-}
+if authentication_status:
+    st.sidebar.success(f"Welcome {name}!")
+    authenticator.logout("Logout", "sidebar")
 
-if st.session_state["user_email"]:
-    # Logged-in user options
-    pages.update({
+    st.sidebar.title("Navigation")
+    pages = {
+        "Home": lambda: st.write("# 🏠 Xabuteo Website\nComplete registration to gain access to the site content."),
         "My Profile": my_profile.show,
         "My Clubs": my_clubs.show,
         "Club Requests": club_requests.show,
-        "Events": events.show,
-        "Logout": lambda: logout()
-    })
-else:
-    # Anonymous user options
-    pages.update({
-        "Register": register.show,
-        "Login": login.show
-    })
+        "Events": events.show
+    }
+    selection = st.sidebar.radio("Go to", list(pages.keys()))
+    pages[selection]()
 
-# --- Sidebar Navigation ---
-with st.sidebar:
-    st.markdown("## 📋 Xabuteo Menu")
-    selection = st.radio("Navigate to", list(pages.keys()), label_visibility="collapsed")
+elif authentication_status is False:
+    st.error("Username or password is incorrect")
+elif authentication_status is None:
+    st.warning("Please enter your username and password")
 
-# --- Page Routing ---
-def logout():
-    st.session_state["user_email"] = None
-    st.success("✅ Logged out.")
-    st.rerun()
-
-# Render selected page
-pages[selection]()
+# Allow registration page to be accessed separately
+if not authentication_status:
+    st.sidebar.markdown("---")
+    if st.sidebar.button("Register"):
+        register.show()
