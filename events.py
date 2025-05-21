@@ -62,7 +62,7 @@ def show():
 
     st.subheader("📋 Event List")
     st.dataframe(df_display, 
-             column_config={"EVENT_TITLE": st.column_config.LinkColumn("Clickable URL")},
+             column_config={"EVENT_TITLE": st.column_config.LinkColumn("EVENT_TITLE")},
              hide_index=True, 
              use_container_width=True)
     
