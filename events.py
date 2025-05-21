@@ -44,34 +44,24 @@ def show():
         )
 
     # Apply filters
-    if title_filter:
+    if title_filter and "EVENT_TITLE" in df.columns:
         df = df[df["EVENT_TITLE"].str.contains(title_filter, case=False, na=False)]
-    if type_filter != "All":
+    if type_filter != "All" and "EVENT_TYPE" in df.columns:
         df = df[df["EVENT_TYPE"] == type_filter]
-    if status_filter != "All":
+    if status_filter != "All" and "EVENT_STATUS" in df.columns:
         df = df[df["EVENT_STATUS"] == status_filter]
 
-    # Hide columns for main view
+    # Columns to hide
     hide_cols = {
         "ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE",
         "EVENT_EMAIL", "EVENT_OPEN", "EVENT_WOMEN", "EVENT_JUNIOR", "EVENT_VETERAN",
         "EVENT_TEAMS", "UPDATE_TIMESTAMP"
     }
     display_cols = [col for col in df.columns if col not in hide_cols]
+    df_display = df[display_cols]
 
     st.subheader("📋 Event List")
-
-    for idx, row in df.iterrows():
-        with st.container(border=True):
-            cols = st.columns([3, 2, 2, 2, 1])
-            cols[0].markdown(f"**{row['EVENT_TITLE']}**")
-            cols[1].markdown(f"🗂️ {row['EVENT_TYPE']}")
-            cols[2].markdown(f"📍 {row['EVENT_LOCATION']}")
-            cols[3].markdown(f"🕒 {row['EVENT_START_DATE'].strftime('%Y-%m-%d')}")
-            if cols[4].button("View", key=f"view_{row['ID']}"):
-                with st.expander(f"📄 Details for {row['EVENT_TITLE']}", expanded=True):
-                    for k, v in row.items():
-                        st.markdown(f"**{k.replace('_', ' ').title()}**: {v}")
+    st.dataframe(df_display, use_container_width=True)
 
     # Add new event
     with st.expander("➕ Add New Event"):
