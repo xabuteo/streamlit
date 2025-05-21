@@ -62,10 +62,10 @@ def show():
 
     st.subheader("📋 Event List")
     st.dataframe(df_display, 
-             column_config={"URL": st.column_config.LinkColumn("Clickable URL")},
+             column_config={"EVENT_TITLE": st.column_config.LinkColumn("Clickable URL")},
              hide_index=True, 
              use_container_width=True)
-
+    
     # Add new event
     with st.expander("➕ Add New Event"):
         with st.form("add_event_form"):
