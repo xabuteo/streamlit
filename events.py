@@ -4,6 +4,13 @@ from utils import get_snowflake_connection
 
 def show():
     st.title("📅 Events")
+    data = {'URL': ['https://www.example.com', 'https://www.google.com', 'https://www.streamlit.io'],
+        'Description': ['Example Website', 'Google Search', 'Streamlit Homepage']}
+    df = pd.DataFrame(data)
+
+    st.dataframe(df, 
+             column_config={"URL": st.column_config.LinkColumn("Clickable URL")},
+             hide_index=True)
 
     # Load events
     try:
