@@ -51,31 +51,17 @@ def show():
     if status_filter != "All" and "EVENT_STATUS" in df.columns:
         df = df[df["EVENT_STATUS"] == status_filter]
 
+    # Columns to hide
+    hide_cols = {
+        "ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE",
+        "EVENT_EMAIL", "EVENT_OPEN", "EVENT_WOMEN", "EVENT_JUNIOR", "EVENT_VETERAN",
+        "EVENT_TEAMS", "UPDATE_TIMESTAMP"
+    }
+    display_cols = [col for col in df.columns if col not in hide_cols]
+    df_display = df[display_cols]
+
     st.subheader("📋 Event List")
-
-    for _, row in df.iterrows():
-        with st.container():
-            st.markdown("----")
-            st.markdown(f"### {row['EVENT_TITLE']}")
-
-            # Event details as table
-            event_details = {
-                "Type": row["EVENT_TYPE"],
-                "Status": row["EVENT_STATUS"],
-                "Location": row["EVENT_LOCATION"],
-                "Start Date": row["EVENT_START_DATE"],
-                "End Date": row["EVENT_END_DATE"],
-                "Women's Event": "Yes" if row.get("EVENT_WOMEN") else "No",
-                "Junior Event": "Yes" if row.get("EVENT_JUNIOR") else "No",
-                "Veteran Event": "Yes" if row.get("EVENT_VETERAN") else "No",
-                "Teams Event": "Yes" if row.get("EVENT_TEAMS") else "No",
-            }
-
-            # Display as 2-column table
-            for key, value in event_details.items():
-                col1, col2 = st.columns([1, 3])
-                col1.markdown(f"**{key}**")
-                col2.markdown(str(value))
+    st.dataframe(df_display, use_container_width=True)
 
     # Add new event
     with st.expander("➕ Add New Event"):
