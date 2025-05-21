@@ -4,14 +4,7 @@ from utils import get_snowflake_connection
 
 def show():
     st.title("📅 Events")
-    data = {'URL': ['https://www.example.com', 'https://www.google.com', 'https://www.streamlit.io'],
-        'Description': ['Example Website', 'Google Search', 'Streamlit Homepage']}
-    df = pd.DataFrame(data)
-
-    st.dataframe(df, 
-             column_config={"URL": st.column_config.LinkColumn("Clickable URL")},
-             hide_index=True)
-
+    
     # Load events
     try:
         conn = get_snowflake_connection()
@@ -68,7 +61,10 @@ def show():
     df_display = df[display_cols]
 
     st.subheader("📋 Event List")
-    st.dataframe(df_display, use_container_width=True)
+    st.dataframe(df_display, 
+             column_config={"URL": st.column_config.LinkColumn("Clickable URL")},
+             hide_index=True, 
+             use_container_width=True)
 
     # Add new event
     with st.expander("➕ Add New Event"):
