@@ -51,27 +51,23 @@ def show():
     if status_filter != "All" and "EVENT_STATUS" in df.columns:
         df = df[df["EVENT_STATUS"] == status_filter]
 
-    # Columns to hide
-    hide_cols = {
-        "ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE",
-        "EVENT_EMAIL", "EVENT_OPEN", "EVENT_WOMEN", "EVENT_JUNIOR",
-        "EVENT_VETERAN", "EVENT_TEAMS", "UPDATE_TIMESTAMP"
-    }
-    display_cols = [col for col in df.columns if col not in hide_cols]
-    df_display = df[display_cols]
-
     st.subheader("📋 Event List")
-    st.dataframe(df_display, use_container_width=True)
 
-    st.markdown("---")
-    st.subheader("🔍 Click an event title to view more details")
-
-    # Expanders for full event detail
     for _, row in df.iterrows():
-        with st.expander(f"📌 {row['EVENT_TITLE']}"):
-            st.markdown("### 📝 Event Details")
-            for col in df.columns:
-                st.markdown(f"**{col.replace('_', ' ').title()}**: {row[col]}")
+        with st.container():
+            st.markdown(
+                f"""
+                <div style="border:1px solid #ccc; padding:1rem; border-radius:1rem; margin-bottom:1rem; background-color:#f9f9f9;">
+                    <h4>{row['EVENT_TITLE']}</h4>
+                    <p><strong>Type:</strong> {row['EVENT_TYPE']}</p>
+                    <p><strong>Status:</strong> {row['EVENT_STATUS']}</p>
+                    <p><strong>Location:</strong> {row['EVENT_LOCATION']}</p>
+                    <p><strong>Start Date:</strong> {row['EVENT_START_DATE']}</p>
+                    <p><strong>End Date:</strong> {row['EVENT_END_DATE']}</p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
     # Add new event
     with st.expander("➕ Add New Event"):
