@@ -1,68 +1,88 @@
 import streamlit as st
-from streamlit_option_menu import option_menu
-from auth import load_credentials
 import streamlit_authenticator as stauth
+import yaml
 
-# Import your app pages
+# Import your pages here
 import home
-import login
-import register
-import my_profile
 import my_clubs
 import club_requests
 import events
+import my_profile
 
-# Load authentication configuration
-config = load_credentials()
+from utils import get_snowflake_connection  # Your DB utils
+
+# --- Auth setup ---
+
+def load_yaml_credentials():
+    with open('config.yaml') as file:
+        config = yaml.safe_load(file)
+    return config['credentials']
+
+def get_db_credentials():
+    # Replace with your actual DB call to fetch user credentials
+    # Must return dict like {"usernames": {username: {"name": ..., "password": ...}}}
+    return {
+        "usernames": {
+            # example user
+            "dbuser1": {
+                "name": "DB User One",
+                "password": "$2b$12$..."  # bcrypt hashed password string
+            }
+        }
+    }
+
+def get_combined_credentials():
+    db_creds = get_db_credentials()
+    yaml_creds = load_yaml_credentials()
+    combined = {"usernames": {}}
+    combined["usernames"].update(db_creds.get("usernames", {}))
+    combined["usernames"].update(yaml_creds.get("usernames", {}))
+    return combined
+
+credentials = get_combined_credentials()
 
 authenticator = stauth.Authenticate(
-    credentials=config['credentials'],
-    cookie_name=config['cookie']['name'],
-    key=config['cookie']['key'],
-    cookie_expiry_days=config['cookie']['expiry_days'],
+    credentials,
+    "xabuteo_cookie",  # cookie name
+    "xabuteo_signature_key",  # secret key, keep it secret & random!
+    cookie_expiry_days=1,
 )
 
-# Perform login
-with st.sidebar:
-    name, auth_status, username = authenticator.login('Login', 'login')
+# --- Main app ---
 
-# Set session state on successful login
-if auth_status:
-    st.session_state["user_email"] = username
-    st.session_state["user_name"] = name
-    authenticator.logout("Logout", "sidebar")
-elif auth_status is False:
-    st.error("❌ Incorrect username or password.")
-elif auth_status is None:
-    st.info("🔒 Please log in to continue.")
+def main():
+    st.set_page_config(page_title="Xabuteo App", layout="wide")
 
-# Define pages
-pages = {
-    "Home": home.show,
-    "My Profile": my_profile.show,
-    "My Clubs": my_clubs.show,
-    "Club Requests": club_requests.show,
-    "Events": events.show,
-    "Login": login.show,
-    "Register": register.show
-}
+    # Sidebar login/logout
+    with st.sidebar:
+        name, authentication_status, username = authenticator.login("Login", "sidebar")
 
-# Filter pages based on login status
-if st.session_state.get("user_email"):
-    available_pages = {
-        "Home": home.show,
-        "My Profile": my_profile.show,
-        "My Clubs": my_clubs.show,
-        "Club Requests": club_requests.show,
-        "Events": events.show,
-    }
-else:
-    available_pages = {
-        "Home": home.show,
-        "Login": login.show,
-        "Register": register.show
-    }
+    if authentication_status:
+        # Show welcome and logout
+        st.sidebar.write(f"Welcome, **{name}**")
+        if st.sidebar.button("Logout"):
+            authenticator.logout("Logout", "sidebar")
+            st.experimental_rerun()
 
-# Show navigation menu as a sidebar radio button
-selection = st.sidebar.radio("📂 Navigation", list(available_pages.keys()))
-available_pages[selection]()
+        # Page selection menu in sidebar as radio buttons
+        pages = {
+            "Home": home.show,
+            "My Clubs": my_clubs.show,
+            "Club Requests": club_requests.show,
+            "Events": events.show,
+            "My Profile": my_profile.show,
+        }
+
+        st.sidebar.markdown("---")
+        selection = st.sidebar.radio("Navigation", list(pages.keys()))
+
+        # Call selected page function
+        pages[selection]()
+
+    elif authentication_status is False:
+        st.error("❌ Username/password is incorrect")
+    else:
+        st.info("👋 Please enter your username and password")
+
+if __name__ == "__main__":
+    main()
