@@ -1,6 +1,5 @@
 import streamlit as st
 import streamlit_authenticator as stauth
-import yaml
 
 # Import your pages here
 import home
@@ -10,6 +9,9 @@ import events
 import my_profile
 
 from utils import get_snowflake_connection  # Your DB utils
+
+# Set page config immediately after imports
+st.set_page_config(page_title="Xabuteo App", layout="wide")
 
 # --- Auth setup ---
 
