@@ -29,12 +29,12 @@ authenticator = stauth.Authenticate(
 
 def main():
     with st.sidebar:
-        name, authentication_status, username = authenticator.login("Login", "sidebar")
+        name, authentication_status, username = authenticator.login("Login", location="sidebar")
 
     if authentication_status:
         st.sidebar.write(f"Welcome, **{name}**")
         if st.sidebar.button("Logout"):
-            authenticator.logout("Logout", "sidebar")
+            authenticator.logout("Logout", location="sidebar")
             st.experimental_rerun()
 
         pages = {
