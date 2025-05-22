@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 from utils import get_snowflake_connection
 
-st.set_page_config(page_title="Events", layout="wide")
-
 def show():
     st.title("📅 Events")
 
