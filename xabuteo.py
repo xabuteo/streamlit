@@ -1,59 +1,51 @@
 import streamlit as st
-import streamlit_authenticator as stauth
-import yaml
 
-# Import your pages here
+# Import page modules
 import home
+import register
+import login
+import my_profile
 import my_clubs
 import club_requests
 import events
-import my_profile
 
-from auth import load_credentials  # Auth loader with DB + YAML merge
+st.set_page_config(page_title="Xabuteo", layout="wide", initial_sidebar_state="expanded")
 
-# --- Set page config immediately ---
-st.set_page_config(page_title="Xabuteo App", layout="wide")
+# --- Initialize session state ---
+if "user_email" not in st.session_state:
+    st.session_state["user_email"] = None
 
-# --- Auth setup ---
+# --- Define page options dynamically ---
+pages = {
+    "Home": home.show,
+}
 
-credentials = load_credentials()
+if st.session_state["user_email"]:
+    # Logged-in user options
+    pages.update({
+        "My Profile": my_profile.show,
+        "My Clubs": my_clubs.show,
+        "Club Requests": club_requests.show,
+        "Events": events.show,
+        "Logout": lambda: logout()
+    })
+else:
+    # Anonymous user options
+    pages.update({
+        "Register": register.show,
+        "Login": login.show
+    })
 
-authenticator = stauth.Authenticate(
-    credentials['credentials'],
-    credentials['cookie']['name'],
-    credentials['cookie']['key'],
-    cookie_expiry_days=credentials['cookie']['expiry_days']
-)
+# --- Sidebar Navigation ---
+with st.sidebar:
+    st.markdown("## 📋 Xabuteo Menu")
+    selection = st.radio("Navigate to", list(pages.keys()), label_visibility="collapsed")
 
-# --- Main app ---
+# --- Page Routing ---
+def logout():
+    st.session_state["user_email"] = None
+    st.success("✅ Logged out.")
+    st.rerun()
 
-def main():
-    with st.sidebar:
-        name, authentication_status, username = authenticator.login("Login", location="sidebar")
-
-    if authentication_status:
-        st.sidebar.write(f"Welcome, **{name}**")
-        if st.sidebar.button("Logout"):
-            authenticator.logout("Logout", location="sidebar")
-            st.experimental_rerun()
-
-        pages = {
-            "Home": home.show,
-            "My Clubs": my_clubs.show,
-            "Club Requests": club_requests.show,
-            "Events": events.show,
-            "My Profile": my_profile.show,
-        }
-
-        st.sidebar.markdown("---")
-        selection = st.sidebar.radio("Navigation", list(pages.keys()))
-
-        pages[selection]()
-
-    elif authentication_status is False:
-        st.error("❌ Username/password is incorrect")
-    else:
-        st.info("👋 Please enter your username and password")
-
-if __name__ == "__main__":
-    main()
+# Render selected page
+pages[selection]()
