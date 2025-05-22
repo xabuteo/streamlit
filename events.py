@@ -2,11 +2,17 @@ import streamlit as st
 import pandas as pd
 from utils import get_snowflake_connection
 
-# MUST be first Streamlit command:
 st.set_page_config(page_title="Events", layout="wide")
 
 def show():
     st.title("📅 Events")
+
+    query_params = st.experimental_get_query_params()
+    selected_event_id = query_params.get("event_id", [None])[0]
+
+    if selected_event_id:
+        show_event_details(selected_event_id)
+        return
     
     # Load events
     try:
@@ -64,10 +70,19 @@ def show():
     df_display = df[display_cols]
 
     st.subheader("📋 Event List")
-    st.dataframe(df_display, 
-             column_config={"EVENT_TITLE": st.column_config.LinkColumn("EVENT_TITLE")},
-             hide_index=True, 
-             use_container_width=True)
+    
+    def make_event_link(row):
+        return f"[{row['EVENT_TITLE']}](/?event_id={row['ID']})"
+    
+    df_display["Event Link"] = df_display.apply(make_event_link, axis=1)
+    
+    # Display markdown table with links
+    st.markdown(
+        df_display[["Event Link", "EVENT_TYPE", "EVENT_START_DATE", "EVENT_END_DATE"]]
+        .rename(columns={"Event Link": "Event Title"})
+        .to_markdown(index=False),
+        unsafe_allow_html=True
+    )
     
     # Add new event
     with st.expander("➕ Add New Event"):
@@ -158,3 +173,32 @@ def show():
                 finally:
                     cursor.close()
                     conn.close()
+
+def show_event_details(event_id):
+    st.markdown("🔙 [Back to Events](?event_id=)")
+
+    try:
+        conn = get_snowflake_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM xabuteo.public.events_v WHERE id = %s", (event_id,))
+        row = cursor.fetchone()
+        cols = [desc[0] for desc in cursor.description]
+        event = dict(zip(cols, row)) if row else None
+    except Exception as e:
+        st.error(f"Error loading event details: {e}")
+        return
+    finally:
+        cursor.close()
+        conn.close()
+
+    if not event:
+        st.warning("Event not found.")
+        return
+
+    st.header(event.get("EVENT_TITLE", "Event Details"))
+    st.write("### Details")
+    for key, value in event.items():
+        st.write(f"**{key.replace('_', ' ').title()}:** {value}")
+
+    if st.button("📝 Register for this Event"):
+        st.success("Registration functionality coming soon!")  # Replace with actual registration logic
