@@ -3,6 +3,7 @@ import pandas as pd
 from utils import get_snowflake_connection
 
 def show():
+    st.set_page_config(page_title="Events", layout="wide")
     st.title("📅 Events")
     
     # Load events
@@ -68,13 +69,32 @@ def show():
     
     # Add new event
     with st.expander("➕ Add New Event"):
+        try:
+            conn = get_snowflake_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT list_value 
+                FROM xabuteo.public.ref_lookup 
+                WHERE list_type = 'event_type' 
+                ORDER BY list_order
+            """)
+            event_type_options = [row[0] for row in cursor.fetchall()]
+        except Exception as e:
+            st.error(f"Failed to load event types: {e}")
+            event_type_options = []
+        finally:
+            cursor.close()
+            conn.close()
+
         with st.form("add_event_form"):
             title = st.text_input("Event Title")
-            event_type = st.text_input("Event Type")
+            event_type = st.selectbox("Event Type", event_type_options)
             location = st.text_input("Location")
             start_date = st.date_input("Start Date")
             end_date = st.date_input("End Date")
-            status = st.selectbox("Event Status", ["Pending", "Confirmed", "Cancelled"])
+            reg_open_date = st.date_input("Registration Open Date")
+            reg_close_date = st.date_input("Registration Close Date")
+            event_email = st.text_input("Contact Email")
             submit = st.form_submit_button("Add Event")
 
             if submit:
@@ -83,13 +103,17 @@ def show():
                     cursor = conn.cursor()
                     cursor.execute("""
                         INSERT INTO xabuteo.public.events (
-                            event_title, event_type, event_location, event_start_date, event_end_date, event_status
-                        ) VALUES (%s, %s, %s, %s, %s, %s)
+                            event_title, event_type, event_location, 
+                            event_start_date, event_end_date, 
+                            reg_open_date, reg_close_date, event_email
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                     """, (
                         title, event_type, location,
                         start_date.strftime('%Y-%m-%d'),
                         end_date.strftime('%Y-%m-%d'),
-                        status
+                        reg_open_date.strftime('%Y-%m-%d'),
+                        reg_close_date.strftime('%Y-%m-%d'),
+                        event_email
                     ))
                     conn.commit()
                     st.success("✅ Event added successfully.")
