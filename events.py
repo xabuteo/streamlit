@@ -67,44 +67,28 @@ def show():
     display_cols = [col for col in df.columns if col not in hide_cols]
     df_display = df[display_cols]
 
-    st.subheader("📋 Event List")
-    
-    def make_event_link(row):
-        return f"[{row['EVENT_TITLE']}](/?event_id={row['ID']})"
-    
-    df_display["Event Link"] = df_display.apply(make_event_link, axis=1)
-    
-    # Display events with clickable links using HTML table
     st.markdown("### 📋 Event List")
     
-    # Create HTML table
-    table_html = """
-    <table style="width:100%">
-        <thead>
-            <tr>
-                <th align="left">Event Title</th>
-                <th align="left">Type</th>
-                <th align="left">Start Date</th>
-                <th align="left">End Date</th>
-            </tr>
-        </thead>
-        <tbody>
-    """
-    
     for _, row in df_display.iterrows():
-        table_html += f"""
-            <tr>
-                <td><a href="/?event_id={row['ID']}" target="_self">{row['EVENT_TITLE']}</a></td>
-                <td>{row['EVENT_TYPE']}</td>
-                <td>{row['EVENT_START_DATE']}</td>
-                <td>{row['EVENT_END_DATE']}</td>
-            </tr>
-        """
+        with st.expander(f"{row['EVENT_TITLE']} ({row['EVENT_TYPE']}) – {row['EVENT_START_DATE']} to {row['EVENT_END_DATE']}"):
+            st.write(f"**Location:** {row.get('EVENT_LOCATION', 'N/A')}")
+            st.write(f"**Contact Email:** {row.get('EVENT_EMAIL', 'N/A')}")
+            st.write(f"**Registration Open:** {row.get('REG_OPEN_DATE', 'N/A')}")
+            st.write(f"**Registration Close:** {row.get('REG_CLOSE_DATE', 'N/A')}")
+            st.write(f"**Comments:** {row.get('EVENT_COMMENTS', 'N/A')}")
     
-    table_html += "</tbody></table>"
+            flags = {
+                "Open": row.get("EVENT_OPEN", False),
+                "Women": row.get("EVENT_WOMEN", False),
+                "Junior": row.get("EVENT_JUNIOR", False),
+                "Veteran": row.get("EVENT_VETERAN", False),
+                "Teams": row.get("EVENT_TEAMS", False),
+            }
     
-    # Render HTML safely
-    st.markdown(table_html, unsafe_allow_html=True)
+            st.write("**Categories:** " + ", ".join([k for k, v in flags.items() if v]) or "None")
+    
+            if st.button(f"📝 Register for '{row['EVENT_TITLE']}'", key=f"register_{row['ID']}"):
+                st.success(f"You're registered for **{row['EVENT_TITLE']}**! (stub functionality)")
     
     # Add new event
     with st.expander("➕ Add New Event"):
