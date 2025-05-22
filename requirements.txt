@@ -2,6 +2,3 @@
 snowflake-connector-python
 streamlit
 bcrypt
-streamlit-option-menu
-pyyaml
-streamlit_authenticator
