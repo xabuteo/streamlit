@@ -7,7 +7,7 @@ st.set_page_config(page_title="Events", layout="wide")
 def show():
     st.title("📅 Events")
 
-    query_params = st.experimental_get_query_params()
+    query_params = st.query_params()
     selected_event_id = query_params.get("event_id", [None])[0]
 
     if selected_event_id:
