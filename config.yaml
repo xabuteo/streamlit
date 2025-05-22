@@ -1,19 +1,19 @@
 credentials:
   usernames:
     admin_user:
-      email: admin
+      email: admin@example.com
       name: Admin User
-      password: '$2b$12$KIXdG/nzNo8NqkBsJeG9ku5Q72rIfZ5tu1uCnz9XJDbG5X/epUvqS'  
+      password: '$2b$12$KIXdG/nzNo8NqkBsJeG9ku5Q72rIfZ5tu1uCnz9XJDbG5X/epUvqS'  # bcrypt hash of 'adminpass'
     test_user:
-      email: test
+      email: test@example.com
       name: Test User
-      password: '$2b$12$zfh1RWzS7hYkFl1B2CzZ0eM/2tWxPBbI7s1Nzz9vEa3cZlzL8TziC'  
-      
+      password: '$2b$12$zfh1RWzS7hYkFl1B2CzZ0eM/2tWxPBbI7s1Nzz9vEa3cZlzL8TziC'  # bcrypt hash of 'testpass'
+
 cookie:
   name: xabuteo_cookie
-  key: urban_cookie_collective_secret  # Replace this with your own secret key
+  key: urban_cookie_collective_secret  # Replace with your own secret key
   expiry_days: 7
 
 preauthorized:
   emails:
-    - admin
+    - admin@example.com
