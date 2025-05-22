@@ -95,24 +95,27 @@ def show():
             event_type = st.selectbox("Event Type", event_types)
     
             location = st.text_input("Location")
-            start_date = st.date_input("Start Date")
-            end_date = st.date_input("End Date")
-    
-            reg_open_date = st.date_input("Registration Open Date")
-            reg_close_date = st.date_input("Registration Close Date")
-    
-            event_email = st.text_input("Contact Email")
+            # Date
+            col1, col2 = st.columns(2)
+            with col1:            
+                start_date = st.date_input("Start Date")
+                reg_open_date = st.date_input("Registration Open Date")
+            with col2:            
+                end_date = st.date_input("End Date")
+                reg_close_date = st.date_input("Registration Close Date")
     
             # Checkboxes
             col1, col2, col3 = st.columns(3)
             with col1:
-                event_open = st.checkbox("Open Event")
+                event_open = st.checkbox("Open")
                 event_women = st.checkbox("Women")
             with col2:
                 event_junior = st.checkbox("Junior")
                 event_veteran = st.checkbox("Veteran")
             with col3:
                 event_teams = st.checkbox("Teams")
+
+            event_email = st.text_input("Contact Email")
     
             comments = st.text_area("Comments")
     
