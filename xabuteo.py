@@ -26,7 +26,7 @@ import pkg_resources
 print(pkg_resources.get_distribution("streamlit-authenticator").version)
 
 # Perform login
-name, auth_status, username = authenticator.login("Login", "main")
+# name, auth_status, username = authenticator.login("Login", "main")
 
 # Set session state on successful login
 if auth_status:
