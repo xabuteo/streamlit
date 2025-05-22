@@ -22,8 +22,11 @@ authenticator = stauth.Authenticate(
     cookie_expiry_days=config['cookie']['expiry_days'],
 )
 
+import streamlit_authenticator
+print(streamlit_authenticator.__version__)
+
 # Perform login
-name, auth_status, username = authenticator.login(form_name="Login", location="main")
+name, auth_status, username = authenticator.login("Login", "main")
 
 # Set session state on successful login
 if auth_status:
