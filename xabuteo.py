@@ -29,14 +29,14 @@ print(pkg_resources.get_distribution("streamlit-authenticator").version)
 # name, auth_status, username = authenticator.login("Login", "main")
 
 # Set session state on successful login
-if auth_status:
-    st.session_state["user_email"] = username
-    st.session_state["user_name"] = name
-    authenticator.logout("Logout", "sidebar")
-elif auth_status is False:
-    st.error("❌ Incorrect username or password.")
-elif auth_status is None:
-    st.info("🔒 Please log in to continue.")
+# if auth_status:
+#     st.session_state["user_email"] = username
+#     st.session_state["user_name"] = name
+#     authenticator.logout("Logout", "sidebar")
+# elif auth_status is False:
+#     st.error("❌ Incorrect username or password.")
+# elif auth_status is None:
+#     st.info("🔒 Please log in to continue.")
 
 # Define pages
 pages = {
