@@ -4,3 +4,4 @@ streamlit
 bcrypt
 streamlit-option-menu
 pyyaml
+streamlit_authenticator
