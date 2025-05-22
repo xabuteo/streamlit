@@ -22,8 +22,8 @@ authenticator = stauth.Authenticate(
     cookie_expiry_days=config['cookie']['expiry_days'],
 )
 
-import streamlit_authenticator
-print(streamlit_authenticator.__version__)
+import pkg_resources
+print(pkg_resources.get_distribution("streamlit-authenticator").version)
 
 # Perform login
 name, auth_status, username = authenticator.login("Login", "main")
