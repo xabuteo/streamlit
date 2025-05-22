@@ -60,7 +60,7 @@ def show():
 
     # Columns to hide
     hide_cols = {
-        "ID", "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE",
+        "ASSOCIATION_ID", "EVENT_COMMENTS", "REG_OPEN_DATE", "REG_CLOSE_DATE",
         "EVENT_EMAIL", "EVENT_OPEN", "EVENT_WOMEN", "EVENT_JUNIOR", "EVENT_VETERAN",
         "EVENT_TEAMS", "UPDATE_TIMESTAMP"
     }
