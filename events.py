@@ -74,13 +74,37 @@ def show():
     
     df_display["Event Link"] = df_display.apply(make_event_link, axis=1)
     
-    # Display markdown table with links
-    st.markdown(
-        df_display[["Event Link", "EVENT_TYPE", "EVENT_START_DATE", "EVENT_END_DATE"]]
-        .rename(columns={"Event Link": "Event Title"})
-        .to_markdown(index=False),
-        unsafe_allow_html=True
-    )
+    # Display events with clickable links using HTML table
+    st.markdown("### 📋 Event List")
+    
+    # Create HTML table
+    table_html = """
+    <table style="width:100%">
+        <thead>
+            <tr>
+                <th align="left">Event Title</th>
+                <th align="left">Type</th>
+                <th align="left">Start Date</th>
+                <th align="left">End Date</th>
+            </tr>
+        </thead>
+        <tbody>
+    """
+    
+    for _, row in df_display.iterrows():
+        table_html += f"""
+            <tr>
+                <td><a href="/?event_id={row['ID']}" target="_self">{row['EVENT_TITLE']}</a></td>
+                <td>{row['EVENT_TYPE']}</td>
+                <td>{row['EVENT_START_DATE']}</td>
+                <td>{row['EVENT_END_DATE']}</td>
+            </tr>
+        """
+    
+    table_html += "</tbody></table>"
+    
+    # Render HTML safely
+    st.markdown(table_html, unsafe_allow_html=True)
     
     # Add new event
     with st.expander("➕ Add New Event"):
