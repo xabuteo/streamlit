@@ -72,37 +72,43 @@ def show():
     # Add new event
     with st.expander("➕ Add New Event"):
         with st.form("add_event_form"):
-            title = st.text_input("Event Title")
-    
-            # Fetch event types from lookup table
-            try:
-                conn = get_snowflake_connection()
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT list_value
-                    FROM xabuteo.public.ref_lookup
-                    WHERE list_type = 'event_type'
-                    ORDER BY list_order
-                """)
-                event_types = [row[0] for row in cursor.fetchall()]
-            except Exception as e:
-                st.error(f"Error loading event types: {e}")
-                event_types = []
-            finally:
-                cursor.close()
-                conn.close()
-    
-            event_type = st.selectbox("Event Type", event_types)
-    
-            location = st.text_input("Location")
-            # Date
+            col1, col2 = st.columns(2)
+            with col1:            
+                title = st.text_input("Event Title")
+            with col2:            
+                # Fetch event types from lookup table
+                try:
+                    conn = get_snowflake_connection()
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        SELECT list_value
+                        FROM xabuteo.public.ref_lookup
+                        WHERE list_type = 'event_type'
+                        ORDER BY list_order
+                    """)
+                    event_types = [row[0] for row in cursor.fetchall()]
+                except Exception as e:
+                    st.error(f"Error loading event types: {e}")
+                    event_types = []
+                finally:
+                    cursor.close()
+                    conn.close()
+        
+                event_type = st.selectbox("Event Type", event_types)
+
             col1, col2 = st.columns(2)
             with col1:            
                 start_date = st.date_input("Start Date")
-                reg_open_date = st.date_input("Registration Open Date")
             with col2:            
                 end_date = st.date_input("End Date")
+
+            col1, col2 = st.columns(2)
+            with col1:            
+                reg_open_date = st.date_input("Registration Open Date")
+            with col2:            
                 reg_close_date = st.date_input("Registration Close Date")
+            
+            location = st.text_input("Location")
     
             # Checkboxes
             col1, col2, col3 = st.columns(3)
