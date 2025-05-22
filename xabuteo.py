@@ -1,5 +1,6 @@
 import streamlit as st
 import streamlit_authenticator as stauth
+import yaml
 
 # Import your pages here
 import home
