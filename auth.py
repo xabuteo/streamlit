@@ -1,7 +1,5 @@
 import yaml
-import streamlit_authenticator as stauth
 from utils import get_snowflake_connection
-import bcrypt
 
 def load_config_yaml():
     with open('config.yaml') as file:
@@ -13,6 +11,7 @@ def fetch_db_users():
     cursor.execute("""
         SELECT email, first_name || ' ' || last_name AS name, password
         FROM registrations
+        WHERE password IS NOT NULL
     """)
     rows = cursor.fetchall()
     users = {}
@@ -20,7 +19,7 @@ def fetch_db_users():
         users[email] = {
             "name": name,
             "email": email,
-            "password": password  # Assumes password is already hashed
+            "password": password
         }
     cursor.close()
     conn.close()
@@ -28,17 +27,13 @@ def fetch_db_users():
 
 def merge_users(yaml_users, db_users):
     combined = yaml_users.copy()
-    for username, info in db_users.items():
-        if username not in combined:
-            combined[username] = info
+    combined.update(db_users)  # DB users override YAML if duplicate
     return combined
 
 def load_credentials():
-    yaml_config = load_config_yaml()
+    config = load_config_yaml()
+    yaml_users = config['credentials']['usernames']
     db_users = fetch_db_users()
-
-    yaml_users = yaml_config['credentials']['usernames']
     merged_users = merge_users(yaml_users, db_users)
-
-    yaml_config['credentials']['usernames'] = merged_users
-    return yaml_config
+    config['credentials']['usernames'] = merged_users
+    return config
