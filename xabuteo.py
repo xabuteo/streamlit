@@ -23,7 +23,7 @@ authenticator = stauth.Authenticate(
 )
 
 # Perform login
-name, auth_status, username = authenticator.login("Login", location="main")
+name, auth_status, username = authenticator.login(form_name="Login", location="main")
 
 # Set session state on successful login
 if auth_status:
